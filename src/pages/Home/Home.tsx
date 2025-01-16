@@ -1,27 +1,44 @@
 import { Play } from "phosphor-react";
 import { CountdownContainer, FormContainer, HomeContainer, MinutesAmmountInput, Separator, StartCountDownButton, TaskInput } from "./styles";
-import { useState } from "react";
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as zod from 'zod';
+ 
+// controlled / uncontrolled
 
-// controller / uncontroller
+
+const newCycleFormValidationSchema = zod.object({
+  task: zod.string().min(1, 'Informe a tarefa'),
+  minutesAmmoun: zod.number().min(5).max(60)
+})
 
 export function Home() {
-  const [task, setTask] = useState('');
+  const {
+    register,
+    handleSubmit,
+    watch
+  } = useForm({
+    resolver: zodResolver(newCycleFormValidationSchema),
+  })
 
-  function resetForm() {
-    setTask('')
+  function handleCreateNewCycle(data) {
+    console.log(data);   
   }
+  
+  const task = watch('task');
+  const isCubmitDisabled = !task;
+
 
   return (
     <HomeContainer>
-      <form action="">
+      <form onSubmit={handleSubmit(handleCreateNewCycle)} action="">
         <FormContainer>
           <label htmlFor="">Vou trabalhar em</label>
           <TaskInput 
-            id="task" 
+            id="task"
             placeholder="De um nome para o seu projeto" 
             list="task-suggestions"
-            onChange={(e) => setTask(e.target.value)}
-            value={task}
+            {...register('task')}
           />
 
           <datalist id="task-suggestions">
@@ -39,6 +56,7 @@ export function Home() {
             step={5}
             min={5}
             max={60}
+            {...register('minutesAmmountInput', { valueAsNumber: true})}
           />
 
           <span>minutos.</span>
@@ -52,7 +70,7 @@ export function Home() {
           <span>0</span>
         </CountdownContainer>
 
-        <StartCountDownButton disabled={!task.trim()} type="submit">
+        <StartCountDownButton disabled={isCubmitDisabled} type="submit">
           <Play size={24}/>
           Começar
         </StartCountDownButton>
