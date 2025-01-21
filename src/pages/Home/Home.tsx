@@ -3,7 +3,8 @@ import { CountdownContainer, FormContainer, HomeContainer, MinutesAmmountInput, 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as zod from 'zod';
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { differenceInSeconds } from 'date-fns'
  
 const newCycleFormValidationSchema = zod.object({
   task: zod.string().min(1, 'Informe a tarefa'),
@@ -16,7 +17,8 @@ type NewCycleFormData = zod.infer<typeof newCycleFormValidationSchema>;
 interface Cycle {
  id: string,
  task: string,
- minutesAmount: number
+ minutesAmount: number,
+ startDate: Date
 }
 export function Home() {
   
@@ -38,21 +40,37 @@ export function Home() {
     }
   })
 
+  const activeCycle = cycles.find( (cycle) => cycle.id === activeCycleId )
+
+  useEffect(()=> {
+    let interval: number;
+    if(activeCycle) {
+      interval = setInterval(() => {
+        setAmountSecondspast(differenceInSeconds(new Date(), activeCycle.startDate))
+      }, 1000)
+    }
+
+    return () => {
+      clearInterval(interval)
+    }
+  }, [activeCycle])
+
   function handleCreateNewCycle(data: NewCycleFormData) {
     const id = String(new Date().getTime());
     const newCycle: Cycle = {
       id,
       task: data.task,
-      minutesAmount: data.minutesAmmount
+      minutesAmount: data.minutesAmmount,
+      startDate: new Date(),
     } 
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     setCycles((state) => [...state, newCycle])
     setActiveCycleId(id)
     reset() 
+    setAmountSecondspast(0)
   }
 
-  const activeCycle = cycles.find( (cycle) => cycle.id === activeCycleId )
   const totalSeconds = activeCycle ? activeCycle.minutesAmount*60 : 0;
   const currentSeconds = activeCycle ? totalSeconds - amountSecondspast : 0;
   
@@ -61,6 +79,12 @@ export function Home() {
 
   const minutes = String(munitesAmount).padStart(2, '0')
   const seconds = String(secondsAmount).padStart(2, '0')
+
+  useEffect(() => { 
+    if(activeCycle){
+      document.title = `${minutes}:${seconds}`
+    }
+  }, [minutes, seconds, activeCycle ])
 
   
   const task = watch('task');
