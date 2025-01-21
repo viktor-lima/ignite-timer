@@ -3,10 +3,8 @@ import { CountdownContainer, FormContainer, HomeContainer, MinutesAmmountInput, 
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as zod from 'zod';
+import { useState } from "react";
  
-// controlled / uncontrolled
-
-
 const newCycleFormValidationSchema = zod.object({
   task: zod.string().min(1, 'Informe a tarefa'),
   minutesAmmount: zod.number().min(5).max(60)
@@ -15,7 +13,18 @@ const newCycleFormValidationSchema = zod.object({
 
 type NewCycleFormData = zod.infer<typeof newCycleFormValidationSchema>;
 
+interface Cycle {
+ id: string,
+ task: string,
+ minutesAmount: number
+}
 export function Home() {
+  
+  const [cycles, setCycles] = useState<Cycle[]>([]);
+  const [activeCycleId, setActiveCycleId] = useState<string | null>(null);
+  const [amountSecondspast, setAmountSecondspast] = useState(0);
+  
+
   const {
     register,
     handleSubmit,
@@ -30,9 +39,29 @@ export function Home() {
   })
 
   function handleCreateNewCycle(data: NewCycleFormData) {
-    console.log(data);  
+    const id = String(new Date().getTime());
+    const newCycle: Cycle = {
+      id,
+      task: data.task,
+      minutesAmount: data.minutesAmmount
+    } 
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    setCycles((state) => [...state, newCycle])
+    setActiveCycleId(id)
     reset() 
   }
+
+  const activeCycle = cycles.find( (cycle) => cycle.id === activeCycleId )
+  const totalSeconds = activeCycle ? activeCycle.minutesAmount*60 : 0;
+  const currentSeconds = activeCycle ? totalSeconds - amountSecondspast : 0;
+  
+  const munitesAmount = Math.floor(currentSeconds / 60)
+  const secondsAmount = currentSeconds % 60;
+
+  const minutes = String(munitesAmount).padStart(2, '0')
+  const seconds = String(secondsAmount).padStart(2, '0')
+
   
   const task = watch('task');
   const isCubmitDisabled = !task;
@@ -65,18 +94,18 @@ export function Home() {
             step={5}
             min={5}
             max={60}
-            {...register('minutesAmmountInput', { valueAsNumber: true})}
+            {...register('minutesAmmount', { valueAsNumber: true})}
           />
 
           <span>minutos.</span>
         </FormContainer>
 
         <CountdownContainer>
-          <span>0</span>
-          <span>0</span>
+          <span>{minutes[0]}</span>
+          <span>{minutes[1]}</span>
           <Separator>:</Separator>
-          <span>0</span>
-          <span>0</span>
+          <span>{seconds[0]}</span>
+          <span>{seconds[1]}</span>
         </CountdownContainer>
 
         <StartCountDownButton disabled={isCubmitDisabled} type="submit">
