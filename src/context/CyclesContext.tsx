@@ -64,11 +64,8 @@ export function CyclesContextProvider({ children}: CyclesContextProvaiderPops) {
       minutesAmount: data.minutesAmmount,
       startDate: new Date(),
     } 
-
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     setCycles((state) => [...state, newCycle])
     setActiveCycleId(id)
-    // reset() 
     setAmountSecondspast(0)
   }
 
